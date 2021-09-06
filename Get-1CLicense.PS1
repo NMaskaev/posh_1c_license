@@ -1,29 +1,29 @@
-# Скрипт получения перечня выданных лицензий на кластером 1С
+# РЎРєСЂРёРїС‚ РїРѕР»СѓС‡РµРЅРёСЏ РїРµСЂРµС‡РЅСЏ РІС‹РґР°РЅРЅС‹С… Р»РёС†РµРЅР·РёР№ РЅР° РєР»Р°СЃС‚РµСЂРѕРј 1РЎ
 $ServerName           = "<Server1C>"
 $ComConnectorName     = "V83.COMConnector"
 
 $ClusterAdmin         = "<Cluster admin login>"
 $ClusterAdminPassword = "<Cluster admin passw>"
 
-# Подключаемся к агенту сервера
+# РџРѕРґРєР»СЋС‡Р°РµРјСЃСЏ Рє Р°РіРµРЅС‚Сѓ СЃРµСЂРІРµСЂР°
 $V83Connector    = New-Object -ComObject $ComConnectorName
 $AgentConnector  = $V83Connector.ConnectAgent($ServerName)
 
-# Получаем список кластеров
+# РџРѕР»СѓС‡Р°РµРј СЃРїРёСЃРѕРє РєР»Р°СЃС‚РµСЂРѕРІ
 $Clusters    = $AgentConnector.GetClusters()
 $MainCluster = $Clusters[0]
 
-# Авторизуемся в нашем кластере
+# РђРІС‚РѕСЂРёР·СѓРµРјСЃСЏ РІ РЅР°С€РµРј РєР»Р°СЃС‚РµСЂРµ
 $AgentConnector.Authenticate($MainCluster,$ClusterAdmin,$ClusterAdminPassword)
 
-# Получим список сеансов
+# РџРѕР»СѓС‡РёРј СЃРїРёСЃРѕРє СЃРµР°РЅСЃРѕРІ
 $ClusterSessions = $AgentConnector.GetSessions($MainCluster)
 
-# Выбираем сеансы которым назначены лицензии
+# Р’С‹Р±РёСЂР°РµРј СЃРµР°РЅСЃС‹ РєРѕС‚РѕСЂС‹Рј РЅР°Р·РЅР°С‡РµРЅС‹ Р»РёС†РµРЅР·РёРё
 $SessionsWithLicense = $ClusterSessions | Where-Object {$_.License -ne $null}
 
 $LicenseTable = $SessionsWithLicense | Select-Object Host,AppId,userName, @{Label="BaseName"; E={$_.InfoBase.Name}},@{L="License";E={$_.License.ShortPresentation}},`
- @{Label = "Спящая"; E= {$_.Hibernate}} | Sort userName
+ @{Label = "РЎРїСЏС‰Р°СЏ"; E= {$_.Hibernate}} | Sort userName
 
 $dubledSession = 0
 $curr          = "_"
@@ -51,24 +51,24 @@ $Hibernated = @()
 $WebClients = @()
 
 $Lan50      += $LicenseTable | Where-Object {$_.License -match "50$"}
-$Lan100     += $LicenseTable | Where-Object {$_.License -match "Сет 100$"}
+$Lan100     += $LicenseTable | Where-Object {$_.License -match "РЎРµС‚ 100$"}
 $Prog100    += $LicenseTable | Where-Object {$_.License -match "100 100$"}
-$Hibernated += $LicenseTable | Where-Object {$_.Спящая  -match $true}
+$Hibernated += $LicenseTable | Where-Object {$_.РЎРїСЏС‰Р°СЏ  -match $true}
 $WebClients += $LicenseTable | Where-object {$_.AppID   -match "WebClient"}
 
-Write-Host "Занято сетевых    50  :" ($Lan50.Count)
-Write-Host "Занято сетевых    100 :" ($Lan100.Count)
-Write-Host "Занято програмных 100 :" ($Prog100.Count)
-Write-Host "Задвоенных сессий     :" ($dubledSession)
-Write-Host "Спящих сессий         :" ($Hibernated.Count)
-Write-host "Веб сессий            :" ($WebClients.Count)
+Write-Host "Р—Р°РЅСЏС‚Рѕ СЃРµС‚РµРІС‹С…    50  :" ($Lan50.Count)
+Write-Host "Р—Р°РЅСЏС‚Рѕ СЃРµС‚РµРІС‹С…    100 :" ($Lan100.Count)
+Write-Host "Р—Р°РЅСЏС‚Рѕ РїСЂРѕРіСЂР°РјРЅС‹С… 100 :" ($Prog100.Count)
+Write-Host "Р—Р°РґРІРѕРµРЅРЅС‹С… СЃРµСЃСЃРёР№     :" ($dubledSession)
+Write-Host "РЎРїСЏС‰РёС… СЃРµСЃСЃРёР№         :" ($Hibernated.Count)
+Write-host "Р’РµР± СЃРµСЃСЃРёР№            :" ($WebClients.Count)
 
 Write-Host ""
-Write-Host "Спящие сессии"
+Write-Host "РЎРїСЏС‰РёРµ СЃРµСЃСЃРёРё"
 $Hibernated | sort License | ft
 
 
-Write-Host "Все сессии"
+Write-Host "Р’СЃРµ СЃРµСЃСЃРёРё"
 $LicenseTable | sort License | ft
 
 
